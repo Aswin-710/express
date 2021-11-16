@@ -1,37 +1,41 @@
-const express = require('express');
-const ConnectDB = require('./connection');
-const User = require('./User');
-const app = express();
+const express = require('express')
+const cors = require('cors')
+const DBConnect = require('./connection')
+const User = require('./user')
+app = express()
 app.use(express.json())
-
-app.get('/select',async (req,res)=>{
-    const data = await User.find();
-    res.json(data);
-});
-
-app.post('/insert',async (req,res)=>{
-    const data = await User.create(req.body);
-    res.json(data);
-});
-
-app.put('/update/:id',async (req,res)=>{
-    const data = await User.findByIdAndUpdate(req.params.id,{$set:req.body},{new:true})
-    res.json(data);
+app.use(cors())
+app.get('/', async (req, res) => {
+ const user = await User.find()
+ return res.json(user)
 })
-
-app.delete('/delete/:id',async (req,res)=>{
-    const data = await User.findByIdAndDelete(req.params.id);
-    res.json(data);
+app.get('/:id', async (req, res) => {
+ const user = await User.find({ _id: req.params.id })
+ return res.json(user)
 })
-
-const PORT = process.env.PORT || 4321;
-app.listen(PORT,()=>{
-    console.log("Server Started");
-    ConnectDB()
-    .then(()=>{
-        console.log("DB Connection Established");
-    })
-    .catch(()=>{
-        console.log("Connection Error");
-    })
+app.post('/', async (req, res) => {
+ const { newUser } = req.body;
+ const user = await User.create(newUser)
+ return res.json(user)
+})
+app.put('/:id', async (req, res) => {
+ const { newUser } = req.body;
+ const id = req.params.id;
+ const user = await User.findByIdAndUpdate(id, {
+ $set: newUser
+ }, {
+ new: true
+ })
+ return res.json(user)
+})
+app.delete('/:id', async (req, res) => {
+ const id = req.params.id
+ await User.findByIdAndDelete(id)
+ return res.json({ message: "User Deleted" })
+})
+const PORT = process.env.PORT || 5000
+app.listen(PORT, () => {
+ DBConnect()
+ .then(() => console.log('server started on PORT : '+PORT))
+ .catch(() => console.log('server error'))
 })
